@@ -1,3 +1,5 @@
-include: https://api.choerodon.com.cn/devops/v1/projects/245961945059782656/ci_contents/pipelines/b7d651ef-c267-4f36-bb0e-aa85a8769b92/content.yaml
+include: https://api.choerodon.com.cn/devops/v1/projects/271314941066903552/ci_contents/pipelines/64e82328-bd9b-41d2-b5a9-fef3abda93bb/content.yaml
 
-#include: https://api.choerodon.com.cn/devops/v1/projects/2183/ci_contents/pipelines/8c055860-eae2-4ef0-8f2a-cebeba9eb914/content.yaml
+#include: https://api.choerodon.com.cn/devops/v1/projects/245961945059782656/ci_contents/pipelines/b7d651ef-c267-4f36-bb0e-aa85a8769b92/content.yaml
+#
+##include: https://api.choerodon.com.cn/devops/v1/projects/2183/ci_contents/pipelines/8c055860-eae2-4ef0-8f2a-cebeba9eb914/content.yaml
