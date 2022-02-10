@@ -1,5 +1,42 @@
-include: https://api.choerodon.com.cn/devops/v1/projects/271314941066903552/ci_contents/pipelines/64e82328-bd9b-41d2-b5a9-fef3abda93bb/content.yaml
-
-#include: https://api.choerodon.com.cn/devops/v1/projects/245961945059782656/ci_contents/pipelines/b7d651ef-c267-4f36-bb0e-aa85a8769b92/content.yaml
-#
-##include: https://api.choerodon.com.cn/devops/v1/projects/2183/ci_contents/pipelines/8c055860-eae2-4ef0-8f2a-cebeba9eb914/content.yaml
+image: registry.cn-shanghai.aliyuncs.com/c7n/cibase:0.11.4
+stages:
+- 代码扫描
+- 构建镜像
+Maven单元测试:
+  stage: 代码扫描
+  script:
+  - mvn clean test -Dmaven.test.failure.ignore=true -DskipTests=false -U
+  - mvn surefire-report:report-only
+  - uploadMavenUnitTestReport
+Java镜像构建:
+  image: registry.cn-shanghai.aliyuncs.com/c7n/cibase:0.11.4
+  stage: 构建镜像
+  services:
+  - name: registry.cn-shanghai.aliyuncs.com/c7n/cibase:0.11.4
+    alias: kaniko
+  script:
+  - set -x
+  - mvn package -Dmaven.test.skip=true -U -e -X -B
+  - mvn package -Dmaven.test.skip=true -U -e -X -B
+  - saveImageMetadata
+  - |-
+    if [ -z $KUBERNETES_SERVICE_HOST ];then
+        ssh -o StrictHostKeyChecking=no root@kaniko /kaniko/kaniko --skip-tls-verify   --no-push \
+        -c $PWD/. -f $PWD/Dockerfile -d ${DOCKER_REGISTRY}/${GROUP_NAME}/${PROJECT_NAME}:${CI_COMMIT_TAG} \
+        --tarPath ${PWD}/${PROJECT_NAME}.tar
+    else
+        ssh -o StrictHostKeyChecking=no root@127.0.0.1 /kaniko/kaniko --skip-tls-verify   --no-push \
+        -c $PWD/. -f $PWD/Dockerfile -d ${DOCKER_REGISTRY}/${GROUP_NAME}/${PROJECT_NAME}:${CI_COMMIT_TAG} \
+        --tarPath ${PWD}/${PROJECT_NAME}.tar
+    fi
+  - skopeo copy --dest-tls-verify=false --dest-creds=${DOCKER_USERNAME}:${DOCKER_PASSWORD}
+    docker-archive:${PWD}/${PROJECT_NAME}.tar docker://${DOCKER_REGISTRY}/${GROUP_NAME}/${PROJECT_NAME}:${CI_COMMIT_TAG}
+  - chart_build
+before_script:
+- |
+  http_status_code=`curl -o .auto_devops.sh -s -m 10 --connect-timeout 10 -w %{http_code} "https://api.choerodon.com.cn/devops/ci?token=${Token}&type=microservice"`
+  if [ "$http_status_code" != "200" ]; then
+    cat ./.auto_devops.sh
+    exit 1
+  fi
+  source ./.auto_devops.sh
