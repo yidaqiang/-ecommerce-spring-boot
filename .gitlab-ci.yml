@@ -19,7 +19,7 @@ Java镜像构建:
   - mvn package -Dmaven.test.skip=true -U -e -X -B
   - mvn package -Dmaven.test.skip=true -U -e -X -B
   - saveImageMetadata
-  - |-
+  - |
     if [ -z $KUBERNETES_SERVICE_HOST ];then
         ssh -o StrictHostKeyChecking=no root@kaniko /kaniko/kaniko --skip-tls-verify   --no-push \
         -c $PWD/. -f $PWD/Dockerfile -d ${DOCKER_REGISTRY}/${GROUP_NAME}/${PROJECT_NAME}:${CI_COMMIT_TAG} \
